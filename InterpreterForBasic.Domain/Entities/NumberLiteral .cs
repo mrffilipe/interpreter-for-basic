@@ -1,6 +1,6 @@
 ﻿namespace InterpreterForBasic.Domain;
 
-public class NumberLiteral
+public class NumberLiteral : AstNode
 {
     public string Value { get; private set; }
 

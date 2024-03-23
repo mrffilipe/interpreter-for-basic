@@ -6,20 +6,37 @@ internal class Program
 {
     static void Main(string[] args)
     {
-        try
-        {
-            string code = "10 PRINT 123";
-            Lexer lexer = new Lexer(code);
-            List<Token> tokens = lexer.Tokenize();
 
-            foreach (var token in tokens)
-            {
-                Console.WriteLine($"Tipo: {token.Type}, Valor: {token.Value}");
-            }
-        }
-        catch (Exception ex)
+        Console.WriteLine("Basic Interpreter");
+        Console.WriteLine("Enter BASIC code, or type 'exit' to quit:");
+
+        while (true)
         {
-            Console.WriteLine(ex.ToString());
+            Console.WriteLine(">>");
+
+            string input = Console.ReadLine();
+
+            if (input.ToLower() == "exit")
+            {
+                break;
+            }
+
+            try
+            {
+                Lexer lexer = new Lexer(input);
+                List<Token> tokens = lexer.Tokenize();
+
+                Parser parser = new Parser(tokens);
+                AstNode ast = parser.Parse();
+
+                Interpreter interpreter = new Interpreter();
+                object result = interpreter.Interpret(ast);
+                Console.WriteLine(result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
         }
     }
 }

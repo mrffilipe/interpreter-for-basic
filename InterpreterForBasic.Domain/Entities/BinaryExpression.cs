@@ -1,6 +1,6 @@
 ﻿namespace InterpreterForBasic.Domain;
 
-public class BinaryExpression
+public class BinaryExpression : AstNode
 {
     public AstNode Left { get; private set; }
     public Token Token { get; private set; }
