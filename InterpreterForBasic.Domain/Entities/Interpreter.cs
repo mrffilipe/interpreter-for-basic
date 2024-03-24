@@ -9,6 +9,11 @@ public class Interpreter
 
     private object Evaluate(AstNode node)
     {
+        if (node == null)
+        {
+            return null; // para instruções não reconhecidas
+        }
+
         switch (node)
         {
             case BinaryExpression binaryExpr:
@@ -16,7 +21,6 @@ public class Interpreter
             case NumberLiteral number:
                 return int.Parse(number.Value);
             case StringLiteral strLiteral:
-                Console.WriteLine(strLiteral.Value);
                 return strLiteral.Value;
             case PrintStatement printStatement:
                 object value = Evaluate(printStatement.Expression);

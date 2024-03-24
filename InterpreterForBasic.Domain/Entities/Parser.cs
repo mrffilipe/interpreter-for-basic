@@ -62,8 +62,13 @@ public class Parser
 
             return new PrintStatement(expression);
         }
+        else
+        {
+            Advance();
+        }
 
-        throw new Exception("Unknown statement");
+        //throw new Exception("Unknown statement");
+        return null;
     }
 
     private bool Match(string type)

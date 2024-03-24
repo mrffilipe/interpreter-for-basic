@@ -31,8 +31,12 @@ public class Lexer
             else if (char.IsLetter(currentChar))
             {
                 string word = ReadWord();
-                string type = GetTokenType(word);
-                tokens.Add(new Token(type, word));
+
+                if (!string.IsNullOrEmpty(word))
+                {
+                    string type = GetTokenType(word);
+                    tokens.Add(new Token(type, word));
+                }
             }
             else if (currentChar == '\"')
             {
@@ -52,12 +56,29 @@ public class Lexer
     {
         int startPosition = _position;
 
-        while (!AtEnd() && (char.IsLetterOrDigit(Peek()) || Peek().Equals("-")))
+        while (!AtEnd() && (char.IsLetterOrDigit(Peek()) || Peek().Equals("_")))
         {
             Advance();
         }
 
-        return _input.Substring(startPosition, _position - startPosition);
+        string word = _input.Substring(startPosition, _position - startPosition);
+
+        if (word.ToUpper() == "REM")
+        {
+            IgnoreRestOfTheLine();
+
+            return "";
+        }
+
+        return word;
+    }
+
+    private void IgnoreRestOfTheLine()
+    {
+        while (!AtEnd() && Peek() != '\n')
+        {
+            Advance();
+        }
     }
 
     private string ReadString()
