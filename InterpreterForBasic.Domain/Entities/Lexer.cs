@@ -34,6 +34,11 @@ public class Lexer
                 string type = GetTokenType(word);
                 tokens.Add(new Token(type, word));
             }
+            else if (currentChar == '\"')
+            {
+                string str = ReadString();
+                tokens.Add(new Token("STRING", str));
+            }
             else
             {
                 throw new Exception($"Caractere inesperado: {currentChar}");
@@ -53,6 +58,29 @@ public class Lexer
         }
 
         return _input.Substring(startPosition, _position - startPosition);
+    }
+
+    private string ReadString()
+    {
+        Advance();
+
+        int startPosition = _position;
+
+        while (!AtEnd() && Peek() != '\"')
+        {
+            Advance();
+        }
+
+        if (AtEnd())
+        {
+            throw new Exception("String literal não fechada.");
+        }
+
+        string value = _input.Substring(startPosition, _position - startPosition);
+
+        Advance();
+
+        return value;
     }
 
     private string GetTokenType(string word)

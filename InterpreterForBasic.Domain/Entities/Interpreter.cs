@@ -15,6 +15,9 @@ public class Interpreter
                 return EvaluateBinaryExpression(binaryExpr);
             case NumberLiteral number:
                 return int.Parse(number.Value);
+            case StringLiteral strLiteral:
+                Console.WriteLine(strLiteral.Value);
+                return strLiteral.Value;
             case PrintStatement printStatement:
                 object value = Evaluate(printStatement.Expression);
                 Console.WriteLine(value);

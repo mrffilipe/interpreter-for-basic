@@ -1,6 +1,4 @@
-﻿using System.Text.RegularExpressions;
-
-namespace InterpreterForBasic.Domain;
+﻿namespace InterpreterForBasic.Domain;
 
 public class Parser
 {
@@ -14,7 +12,7 @@ public class Parser
 
     public AstNode Parse()
     {
-        return ParseExpression();
+        return ParseStatement();
     }
 
     private AstNode ParseExpression()
@@ -47,8 +45,13 @@ public class Parser
             Advance();
             return new NumberLiteral(nextToken.Value);
         }
+        else if (nextToken.Type == "STRING")
+        {
+            Advance();
+            return new StringLiteral(nextToken.Value);
+        }
 
-        throw new Exception("Unexpected token");
+        throw new Exception($"Unexpected token: {nextToken.Type}");
     }
 
     private AstNode ParseStatement()
@@ -65,7 +68,7 @@ public class Parser
 
     private bool Match(string type)
     {
-        if (Peek().Type == type)
+        if (!AtEnd() && Peek().Type == type)
         {
             Advance();
 
@@ -73,6 +76,11 @@ public class Parser
         }
 
         return false;
+    }
+
+    private bool AtEnd()
+    {
+        return Peek().Type == "EOF";
     }
 
     private Token Peek()
