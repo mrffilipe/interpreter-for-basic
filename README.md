@@ -10,10 +10,10 @@
 ## Como executar o projeto
 
 #### Download e instalação do .NET (versão 8)
-- [Faça o download e siga as instruções para instalação de acordo com o sistema operacional pretendidado](#https://dotnet.microsoft.com/pt-br/download/dotnet/8.0).
+- [Faça o download e siga as instruções para instalação de acordo com o sistema operacional pretendidado](https://dotnet.microsoft.com/pt-br/download/dotnet/8.0).
 
 #### Execução do projeto
-- [Faça um clone ou baixe o arquivo .ZIP do repositório mrffilipe/interpreter-for-basic (GitHub)](#https://github.com/mrffilipe/interpreter-for-basic).
+- [Faça um clone ou baixe o arquivo .ZIP do repositório mrffilipe/interpreter-for-basic (GitHub)](https://github.com/mrffilipe/interpreter-for-basic).
 - Extraia o arquivo .ZIP (ou navegue até o diretório main caso tenha clonado o repositório.
 - Abra um terminal no diretório main e execute os comandos abaixo (lembre-se de ter instalado corretamente o .NET).
 - Para restaurar todos os pacotes do projeto .NET use **dotnet restore**.
