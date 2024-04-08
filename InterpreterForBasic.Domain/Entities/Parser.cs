@@ -4,6 +4,7 @@ public class Parser
 {
     private readonly List<Token> _tokens;
     private int _position;
+    private Dictionary<string, AstNode> _labelMap = new Dictionary<string, AstNode>();
 
     public Parser(List<Token> tokens)
     {
@@ -12,7 +13,34 @@ public class Parser
 
     public AstNode Parse()
     {
-        return ParseStatement();
+        List<AstNode> programNodes = new List<AstNode>();
+
+        while (!AtEnd())
+        {
+            string label = null;
+            Token currentToken = Peek();
+
+            if (currentToken.Type != "LABEL")
+            {
+                label = currentToken.Value;
+
+                Advance();
+            }
+
+            AstNode statement = ParseStatement();
+
+            if (statement != null)
+            {
+                if (label != null)
+                {
+                    _labelMap[label] = statement;
+                }
+
+                programNodes.Add(statement);
+            }
+        }
+
+        return new ProgramNode(programNodes);
     }
 
     private AstNode ParseExpression()
@@ -65,6 +93,8 @@ public class Parser
         else
         {
             Advance();
+
+            return null;
         }
 
         //throw new Exception("Unknown statement");

@@ -2,9 +2,9 @@
 
 public class Interpreter
 {
-    public object Interpret(AstNode root)
+    public void Interpret(AstNode root)
     {
-        return Evaluate(root);
+        Evaluate(root);
     }
 
     private object Evaluate(AstNode node)
@@ -16,6 +16,12 @@ public class Interpreter
 
         switch (node)
         {
+            case ProgramNode programNode:
+                foreach (AstNode statement in programNode.Statements)
+                {
+                    Evaluate(statement);
+                }
+                return null;
             case BinaryExpression binaryExpr:
                 return EvaluateBinaryExpression(binaryExpr);
             case NumberLiteral number:
@@ -24,10 +30,10 @@ public class Interpreter
                 return strLiteral.Value;
             case PrintStatement printStatement:
                 object value = Evaluate(printStatement.Expression);
-                Console.WriteLine(value);
+                //Console.WriteLine(value);
                 return value;
             default:
-                throw new NotImplementedException("Unknown AST Node type.");
+                throw new NotImplementedException($"Unknown AST Node type: {node.GetType().Name}.");
         }
     }
 
@@ -41,7 +47,7 @@ public class Interpreter
             case "PLUS":
                 return (int)left + (int)right;
             default:
-                throw new NotImplementedException("Unsupported operator.");
+                throw new NotImplementedException($"Unsupported operator: {expr.Token.Type}.");
         }
     }
 }

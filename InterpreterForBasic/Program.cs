@@ -30,12 +30,11 @@ internal class Program
                 AstNode ast = parser.Parse();
 
                 Interpreter interpreter = new Interpreter();
-                object result = interpreter.Interpret(ast);
-                Console.WriteLine(result);
+                interpreter.Interpret(ast);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine($"Error: {ex.Message}");
             }
         }
     }

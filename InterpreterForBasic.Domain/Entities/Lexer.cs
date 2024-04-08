@@ -4,6 +4,7 @@ public class Lexer
 {
     private readonly string _input;
     private int _position;
+    private bool _isStartOfLine = true;
 
     public Lexer(string input)
     {
@@ -21,12 +22,24 @@ public class Lexer
 
             if (char.IsWhiteSpace(currentChar))
             {
+                if (currentChar == '\n')
+                {
+                    _isStartOfLine = true;
+                }
+
                 Advance();
+            }
+            else if (_isStartOfLine && char.IsDigit(currentChar))
+            {
+                string label = ReadNumber();
+                tokens.Add(new Token("LABEL", label));
+                _isStartOfLine = false;
             }
             else if (char.IsDigit(currentChar))
             {
                 string number = ReadNumber();
                 tokens.Add(new Token("NUMBER", number));
+                _isStartOfLine = false;
             }
             else if (char.IsLetter(currentChar))
             {
@@ -37,11 +50,14 @@ public class Lexer
                     string type = GetTokenType(word);
                     tokens.Add(new Token(type, word));
                 }
+
+                _isStartOfLine = false;
             }
             else if (currentChar == '\"')
             {
                 string str = ReadString();
                 tokens.Add(new Token("STRING", str));
+                _isStartOfLine = false;
             }
             else
             {
