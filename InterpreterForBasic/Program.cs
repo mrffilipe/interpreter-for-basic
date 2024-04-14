@@ -13,24 +13,29 @@ internal class Program
             if (File.Exists(filePath))
             {
                 string[] lines = File.ReadAllLines(filePath);
-
                 Lexer lexer = new Lexer();
-                lexer.Tokenize(lines);
+                lexer.Tokenize(lines);  // Tokeniza todas as linhas e armazena em ProgramLines
 
-                foreach (var entry in lexer.ProgramLines)
+                List<Token> allTokens = new List<Token>();  // Lista para armazenar todos os tokens de todas as linhas
+                foreach (var lineTokens in lexer.ProgramLines.Values)  // Itera sobre cada lista de tokens em cada linha
                 {
-                    Console.WriteLine($"Line {entry.Key}:");
-                    foreach (var token in entry.Value)
-                    {
-                        Console.WriteLine($"    {token}");
-                    }
+                    allTokens.AddRange(lineTokens);  // Adiciona os tokens da linha atual à lista total de tokens
                 }
+
+                Parser parser = new Parser(allTokens);  // Cria uma instância do Parser com a lista total de tokens
+                var ast = parser.Parse();  // Analisa os tokens para construir a AST
+
+                // O próximo passo seria usar um visitor para percorrer a AST, como mostrado anteriormente
+                // PrintVisitor visitor = new PrintVisitor();
+                // ast.Accept(visitor);
+
+                // Por agora, vamos assumir que você só quer verificar que a AST foi construída
+                Console.WriteLine("AST construída com sucesso.");
             }
             else
             {
                 Console.WriteLine($"Error: File does not exist at path {filePath}");
             }
-
         }
         catch (Exception ex)
         {
