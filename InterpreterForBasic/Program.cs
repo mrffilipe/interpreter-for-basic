@@ -19,13 +19,18 @@ internal class Program
 
                 foreach (var entry in lexer.ProgramLines)
                 {
-                    Console.WriteLine($"Line {entry.Key}: {entry.Value}");
+                    Console.WriteLine($"Line {entry.Key}:");
+                    foreach (var token in entry.Value)
+                    {
+                        Console.WriteLine($"    {token}");
+                    }
                 }
             }
             else
             {
                 Console.WriteLine($"Error: File does not exist at path {filePath}");
             }
+
         }
         catch (Exception ex)
         {
