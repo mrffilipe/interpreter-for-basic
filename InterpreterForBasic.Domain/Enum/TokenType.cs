@@ -2,11 +2,13 @@
 
 public enum TokenType
 {
-    Number,
-    Identifier,
+    Label,
     Keyword,
+    Identifier,
     Operator,
-    String,
+    NumericLiteral,
+    StringLiteral,
     Separator,
-    EndOfLine
+    Comment,
+    EOL  // End of line
 }
