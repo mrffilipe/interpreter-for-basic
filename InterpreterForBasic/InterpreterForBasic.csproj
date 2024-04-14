@@ -13,4 +13,14 @@
     <ProjectReference Include="..\InterpreterForBasic.Domain\InterpreterForBasic.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="assets\file\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="assets\file\example.basic">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -1,41 +1,27 @@
-﻿using InterpreterForBasic.Domain;
-
-namespace InterpreterForBasic;
+﻿namespace InterpreterForBasic;
 
 internal class Program
 {
+    static Dictionary<int, string> labelTable = new Dictionary<int, string>();
+
     static void Main(string[] args)
     {
+        string filePath = "assets/file/example.basic";
 
-        Console.WriteLine("Basic Interpreter");
-        Console.WriteLine("Enter BASIC code, or type 'exit' to quit:");
-
-        while (true)
+        try
         {
-            Console.WriteLine(">>");
-
-            string input = Console.ReadLine();
-
-            if (input.ToLower() == "exit")
+            if (File.Exists(filePath))
             {
-                break;
+                string[] lines = File.ReadAllLines(filePath);
             }
-
-            try
+            else
             {
-                Lexer lexer = new Lexer(input);
-                List<Token> tokens = lexer.Tokenize();
-
-                Parser parser = new Parser(tokens);
-                AstNode ast = parser.Parse();
-
-                Interpreter interpreter = new Interpreter();
-                interpreter.Interpret(ast);
+                Console.WriteLine($"Error: File does not exist at path {filePath}");
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
         }
     }
 }
