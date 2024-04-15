@@ -104,8 +104,19 @@ public class Parser
     private void ExecutePrint()
     {
         currentTokenIndex++;  // Skip 'PRINT'
-        int value = EvaluateExpression();
-        Console.WriteLine(value);
+
+        if (CurrentToken.Type == TokenType.StringLiteral)
+        {
+            // Diretamente imprime o literal string
+            Console.WriteLine(CurrentToken.Value.Trim('"'));  // Remove aspas duplas antes de imprimir
+            currentTokenIndex++;  // Move past the string literal
+        }
+        else
+        {
+            // Assume que o token é uma expressão numérica e avalia
+            int value = EvaluateExpression();
+            Console.WriteLine(value);
+        }
     }
 
     private void ExecuteGoto()
@@ -134,7 +145,8 @@ public class Parser
             }
             else
             {
-                // No operator, just return the variable's value
+                // If the next token is not an operator, it could be EOL or ':', just return the variable's value
+                // currentTokenIndex should not increment here because it might skip necessary tokens like EOL or ':'
                 return leftValue;
             }
         }
@@ -152,6 +164,7 @@ public class Parser
             else
             {
                 // No operator, just return the number
+                // Similar to the above, do not increment currentTokenIndex here
                 return leftValue;
             }
         }
@@ -168,23 +181,7 @@ public class Parser
         if (currentTokenIndex >= tokens.Count)
             throw new Exception("Incomplete expression");
 
-        int rightValue;
-        if (tokens[currentTokenIndex].Type == TokenType.Identifier)
-        {
-            string varName = tokens[currentTokenIndex].Value;
-            if (!variables.TryGetValue(varName, out rightValue))
-                throw new Exception($"Undefined variable {varName}");
-        }
-        else if (tokens[currentTokenIndex].Type == TokenType.NumericLiteral)
-        {
-            rightValue = int.Parse(tokens[currentTokenIndex].Value);
-        }
-        else
-        {
-            throw new Exception("Right-hand side of expression error");
-        }
-
-        currentTokenIndex++;  // Move past the right value
+        int rightValue = EvaluateExpression();  // Recursively evaluate the right-hand expression
 
         switch (op)
         {
