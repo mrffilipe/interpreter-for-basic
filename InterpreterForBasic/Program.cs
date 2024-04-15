@@ -23,8 +23,7 @@ internal class Program
                 }
 
                 Parser parser = new Parser(allTokens);  // Cria uma instância do Parser com a lista total de tokens
-                var ast = parser.Parse();  // Analisa os tokens para construir a AST
-
+                parser.Parse();
                 // O próximo passo seria usar um visitor para percorrer a AST, como mostrado anteriormente
                 // PrintVisitor visitor = new PrintVisitor();
                 // ast.Accept(visitor);

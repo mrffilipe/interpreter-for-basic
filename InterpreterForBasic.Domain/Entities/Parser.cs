@@ -5,159 +5,204 @@ public class Parser
     private readonly List<Token> tokens;
     private int currentTokenIndex;
     private Token CurrentToken => tokens[currentTokenIndex];
+    private Dictionary<string, int> variables = new Dictionary<string, int>();
 
     public Parser(List<Token> tokens)
     {
         this.tokens = tokens;
     }
 
-    public AstNode Parse()
+    public void Parse()
     {
-        AstNode rootNode = null;
         while (currentTokenIndex < tokens.Count && CurrentToken.Type != TokenType.EOL)
         {
-            var node = ParseLine();
-            if (rootNode == null)
-                rootNode = node;
-            // Para uma estrutura mais complexa, você pode precisar de uma forma de conectar múltiplos nós de linha
-            // Por exemplo, adicionando-os a uma lista ou a um nó "root" que os contém todos
+            ParseLine();
         }
-        return rootNode;
     }
-
-    private AstNode ParseLine()
+    private void ParseLine()
     {
-        AstNode node = null;
-
-        // Certifique-se de não processar uma linha além do EOL
         while (currentTokenIndex < tokens.Count && CurrentToken.Type != TokenType.EOL)
         {
             if (CurrentToken.Type == TokenType.Comment)
             {
-                // Pula o token de comentário
                 currentTokenIndex++;
-                // Pula qualquer token de EOL após um comentário
-                while (currentTokenIndex < tokens.Count && CurrentToken.Type == TokenType.EOL)
-                {
-                    currentTokenIndex++;
-                }
-                continue;  // Continua para o próximo token
+                continue;
+            }
+
+            if (CurrentToken.Type == TokenType.Separator && CurrentToken.Value == ":")
+            {
+                currentTokenIndex++;
+                continue;
             }
 
             switch (CurrentToken.Type)
             {
                 case TokenType.Keyword when CurrentToken.Value == "IF":
-                    node = ParseConditional();
+                    ExecuteConditional();
                     break;
                 case TokenType.Keyword when CurrentToken.Value == "PRINT":
-                    node = ParsePrint();
+                    ExecutePrint();
                     break;
                 case TokenType.Keyword when CurrentToken.Value == "GOTO":
-                    node = ParseGoto();
+                    ExecuteGoto();
                     break;
                 case TokenType.Keyword when CurrentToken.Value == "INPUT":
-                    node = ParseInput();
+                    ExecuteInput();
                     break;
                 case TokenType.Keyword when CurrentToken.Value == "HALT":
-                    node = ParseHalt();
-                    // Após um HALT não deve haver mais tokens a serem processados nesta linha
-                    currentTokenIndex = tokens.Count;
-                    break;
+                    ExecuteHalt();
+                    return; // Exit after halt
                 case TokenType.Identifier:
-                    node = ParseAssignment();
+                    ExecuteAssignment();
                     break;
                 default:
                     throw new Exception($"Unexpected token: {CurrentToken.Value}");
             }
-
-            // Se um nó foi criado, significa que a linha foi processada.
-            // Se o nó não for um comando de fluxo de controle (como IF ou GOTO), saia do loop.
-            if (node != null && !(node is ConditionalNode) && !(node is GotoNode))
-            {
-                break;
-            }
         }
-
-        // Pula o token EOL apenas se ainda houver tokens restantes para processar.
-        if (currentTokenIndex < tokens.Count && CurrentToken.Type == TokenType.EOL)
-        {
-            currentTokenIndex++;
-        }
-        return node;
+        currentTokenIndex++;  // Move past the EOL
     }
 
-    private HaltNode ParseHalt()
+    private void ExecuteHalt()
     {
-        // Já sabemos que o token atual é 'HALT', então avançamos para o próximo token.
-        currentTokenIndex++;
-
-        // Se o 'HALT' for o último token, não precisamos fazer mais nada.
-        if (currentTokenIndex >= tokens.Count || tokens[currentTokenIndex].Type == TokenType.EOL)
-        {
-            return new HaltNode();
-        }
-
-        // Se houver mais tokens após 'HALT', isso pode ser um erro de sintaxe, 
-        // porque 'HALT' deve ser o último comando executável em uma linha/programa.
-        // Aqui você pode decidir se quer lançar um erro ou apenas registrar um aviso.
-        throw new Exception("Unexpected tokens after 'HALT'");
+        Console.WriteLine("Execution halted.");
+        Environment.Exit(0);
     }
 
-    private InputNode ParseInput()
+    private void ExecuteInput()
     {
         currentTokenIndex++;  // Skip 'INPUT'
-        var variable = new VariableNode { Name = CurrentToken.Value };
+        string variableName = CurrentToken.Value;
         currentTokenIndex++;  // Skip variable name
-        return new InputNode { Variable = variable };
+        Console.Write($"{variableName}: ");
+        int value = int.Parse(Console.ReadLine());
+        variables[variableName] = value;
     }
 
-    private ConditionalNode ParseConditional()
+    private void ExecuteConditional()
     {
         currentTokenIndex++;  // Skip 'IF'
-        var condition = ParseExpression();
-        var trueBranch = new List<AstNode>();
-        while (CurrentToken.Type != TokenType.EOL)
+        bool condition = EvaluateCondition();
+        if (condition)
         {
-            trueBranch.Add(ParseLine());
+            ParseLine();  // Execute the next line if condition is true
         }
-        return new ConditionalNode { Condition = condition, TrueBranch = trueBranch };
+        else
+        {
+            // Skip to next line or handle else (not implemented here)
+        }
     }
 
-    private AssignmentNode ParseAssignment()
+    private void ExecuteAssignment()
     {
-        var variable = new VariableNode { Name = CurrentToken.Value };
+        string variableName = CurrentToken.Value;
         currentTokenIndex++;  // Skip variable name
         currentTokenIndex++;  // Skip '='
-        var expression = ParseExpression();
-        return new AssignmentNode { Variable = variable, Expression = expression };
+        int value = EvaluateExpression();
+        variables[variableName] = value;
     }
 
-    private PrintNode ParsePrint()
+    private void ExecutePrint()
     {
         currentTokenIndex++;  // Skip 'PRINT'
-        var expression = ParseExpression();
-        return new PrintNode { Expression = expression };
+        int value = EvaluateExpression();
+        Console.WriteLine(value);
     }
 
-    private GotoNode ParseGoto()
+    private void ExecuteGoto()
     {
-        currentTokenIndex++;  // Skip 'GOTO'
-        var target = int.Parse(CurrentToken.Value);
-        currentTokenIndex++;  // Skip target line number
-        return new GotoNode { Target = target };
+        // GOTO implementation would require more complex control flow management
+        throw new NotImplementedException("GOTO not implemented.");
     }
 
-    private AstNode ParseExpression()
+    private int EvaluateExpression()
     {
-        AstNode left = CurrentToken.Type == TokenType.Identifier ? (AstNode)new VariableNode { Name = CurrentToken.Value } : new ConstantNode { Value = CurrentToken.Value };
-        currentTokenIndex++;
-        if (currentTokenIndex < tokens.Count && tokens[currentTokenIndex].Type == TokenType.Operator)
+        int leftValue;
+
+        if (CurrentToken.Type == TokenType.Identifier)
         {
-            var op = CurrentToken.Value;
-            currentTokenIndex++;
-            var right = ParseExpression();
-            return new BinaryOperationNode { Left = left, Operator = op, Right = right };
+            // Handle variables
+            string varName = CurrentToken.Value;
+            currentTokenIndex++;  // Move to the next token (possibly an operator)
+
+            if (!variables.TryGetValue(varName, out leftValue))
+                throw new Exception($"Undefined variable {varName}");
+
+            if (currentTokenIndex < tokens.Count && tokens[currentTokenIndex].Type == TokenType.Operator)
+            {
+                // There's an operator, so perform a binary operation
+                return EvaluateBinaryOperation(leftValue);
+            }
+            else
+            {
+                // No operator, just return the variable's value
+                return leftValue;
+            }
         }
-        return left;
+        else if (CurrentToken.Type == TokenType.NumericLiteral)
+        {
+            // Handle numeric literals
+            leftValue = int.Parse(CurrentToken.Value);
+            currentTokenIndex++;  // Move past the number
+
+            if (currentTokenIndex < tokens.Count && tokens[currentTokenIndex].Type == TokenType.Operator)
+            {
+                // There's an operator, so perform a binary operation
+                return EvaluateBinaryOperation(leftValue);
+            }
+            else
+            {
+                // No operator, just return the number
+                return leftValue;
+            }
+        }
+        else
+        {
+            throw new Exception("Expression format error");
+        }
+    }
+
+    private int EvaluateBinaryOperation(int leftValue)
+    {
+        string op = tokens[currentTokenIndex].Value;
+        currentTokenIndex++;  // Skip the operator
+        if (currentTokenIndex >= tokens.Count)
+            throw new Exception("Incomplete expression");
+
+        int rightValue;
+        if (tokens[currentTokenIndex].Type == TokenType.Identifier)
+        {
+            string varName = tokens[currentTokenIndex].Value;
+            if (!variables.TryGetValue(varName, out rightValue))
+                throw new Exception($"Undefined variable {varName}");
+        }
+        else if (tokens[currentTokenIndex].Type == TokenType.NumericLiteral)
+        {
+            rightValue = int.Parse(tokens[currentTokenIndex].Value);
+        }
+        else
+        {
+            throw new Exception("Right-hand side of expression error");
+        }
+
+        currentTokenIndex++;  // Move past the right value
+
+        switch (op)
+        {
+            case "+": return leftValue + rightValue;
+            case "-": return leftValue - rightValue;
+            case "*": return leftValue * rightValue;
+            case "/":
+                if (rightValue == 0)
+                    throw new Exception("Division by zero");
+                return leftValue / rightValue;
+            default:
+                throw new Exception($"Unsupported operator {op}");
+        }
+    }
+
+    private bool EvaluateCondition()
+    {
+        // Similar to EvaluateExpression, but returns a boolean
+        return true;  // Placeholder
     }
 }
