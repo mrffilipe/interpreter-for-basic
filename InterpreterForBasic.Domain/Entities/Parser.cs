@@ -86,15 +86,22 @@ public class Parser
         if (!programLines.ContainsKey(lineNumber))
             throw new Exception($"Line number {lineNumber} not found in program lines.");
 
-        if (programLines.TryGetValue(lineNumber, out var targetTokens))
+        // Find the index of the first token of the target line in the flat token list
+        currentTokenIndex = FindTokenIndexByLineNumber(lineNumber);  // Adjust currentTokenIndex to the start of the target line
+    }
+
+    private int FindTokenIndexByLineNumber(int lineNumber)
+    {
+        int index = 0;
+        foreach (var line in programLines)
         {
-            tokens = targetTokens;  // Set tokens to the target line's tokens
-            currentTokenIndex = 0;  // Reset token index for the new line
+            if (line.Key == lineNumber)
+            {
+                return index;  // Return the index of the first token on the target line
+            }
+            index += line.Value.Count;  // Add the number of tokens in the current line to index
         }
-        else
-        {
-            throw new Exception("GOTO target line has no tokens.");
-        }
+        throw new Exception("Line number not found in tokens.");  // Line number not found
     }
 
     private void ExecuteHalt()
