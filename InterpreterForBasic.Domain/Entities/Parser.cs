@@ -2,56 +2,70 @@
 
 public class Parser
 {
-    private readonly List<Token> tokens;
+    private List<Token> tokens;
     private int currentTokenIndex;
     private Token CurrentToken => tokens[currentTokenIndex];
     private Dictionary<string, int> variables = new Dictionary<string, int>();
+    private Dictionary<int, List<Token>> programLines;
 
-    public Parser(List<Token> tokens)
+    public Parser(Dictionary<int, List<Token>> programLines)
     {
-        this.tokens = tokens;
+        this.programLines = programLines;
+        FlattenTokens();  // Initialize tokens list from program lines
+    }
+
+    private void FlattenTokens()
+    {
+        tokens = new List<Token>();
+        foreach (var line in programLines)
+        {
+            tokens.AddRange(line.Value);  // Add all tokens from each line
+            if (line.Value.Count > 0 && line.Value.Last().Type != TokenType.EOL)
+                tokens.Add(new Token(TokenType.EOL, "\n"));  // Ensure each line ends with EOL
+        }
     }
 
     public void Parse()
     {
-        while (currentTokenIndex < tokens.Count && CurrentToken.Type != TokenType.EOL)
+        while (currentTokenIndex < tokens.Count)
         {
             ParseLine();
         }
     }
+
     private void ParseLine()
     {
         while (currentTokenIndex < tokens.Count && CurrentToken.Type != TokenType.EOL)
         {
             if (CurrentToken.Type == TokenType.Comment)
             {
-                currentTokenIndex++;
+                currentTokenIndex++;  // Skip comments
                 continue;
             }
 
             if (CurrentToken.Type == TokenType.Separator && CurrentToken.Value == ":")
             {
-                currentTokenIndex++;
+                currentTokenIndex++;  // Skip separators
                 continue;
             }
 
             switch (CurrentToken.Type)
             {
-                case TokenType.Keyword when CurrentToken.Value == "IF":
+                case TokenType.Keyword when CurrentToken.Value.ToUpper() == "IF":
                     ExecuteConditional();
                     break;
-                case TokenType.Keyword when CurrentToken.Value == "PRINT":
+                case TokenType.Keyword when CurrentToken.Value.ToUpper() == "PRINT":
                     ExecutePrint();
                     break;
-                case TokenType.Keyword when CurrentToken.Value == "GOTO":
+                case TokenType.Keyword when CurrentToken.Value.ToUpper() == "GOTO":
                     ExecuteGoto();
                     break;
-                case TokenType.Keyword when CurrentToken.Value == "INPUT":
+                case TokenType.Keyword when CurrentToken.Value.ToUpper() == "INPUT":
                     ExecuteInput();
                     break;
-                case TokenType.Keyword when CurrentToken.Value == "HALT":
+                case TokenType.Keyword when CurrentToken.Value.ToUpper() == "HALT":
                     ExecuteHalt();
-                    return; // Exit after halt
+                    return;  // Halt execution
                 case TokenType.Identifier:
                     ExecuteAssignment();
                     break;
@@ -60,6 +74,27 @@ public class Parser
             }
         }
         currentTokenIndex++;  // Move past the EOL
+    }
+
+    private void ExecuteGoto()
+    {
+        currentTokenIndex++;  // Skip 'GOTO'
+        if (CurrentToken.Type != TokenType.NumericLiteral)
+            throw new Exception("Syntax error in GOTO statement: Line number expected.");
+
+        int lineNumber = int.Parse(CurrentToken.Value);
+        if (!programLines.ContainsKey(lineNumber))
+            throw new Exception($"Line number {lineNumber} not found in program lines.");
+
+        if (programLines.TryGetValue(lineNumber, out var targetTokens))
+        {
+            tokens = targetTokens;  // Set tokens to the target line's tokens
+            currentTokenIndex = 0;  // Reset token index for the new line
+        }
+        else
+        {
+            throw new Exception("GOTO target line has no tokens.");
+        }
     }
 
     private void ExecuteHalt()
@@ -134,12 +169,6 @@ public class Parser
             int value = EvaluateExpression();
             Console.WriteLine(value);
         }
-    }
-
-    private void ExecuteGoto()
-    {
-        // GOTO implementation would require more complex control flow management
-        throw new NotImplementedException("GOTO not implemented.");
     }
 
     private int EvaluateExpression()

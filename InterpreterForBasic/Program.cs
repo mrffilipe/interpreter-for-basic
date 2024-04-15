@@ -16,13 +16,13 @@ internal class Program
                 Lexer lexer = new Lexer();
                 lexer.Tokenize(lines);  // Tokeniza todas as linhas e armazena em ProgramLines
 
-                List<Token> allTokens = new List<Token>();  // Lista para armazenar todos os tokens de todas as linhas
-                foreach (var lineTokens in lexer.ProgramLines.Values)  // Itera sobre cada lista de tokens em cada linha
-                {
-                    allTokens.AddRange(lineTokens);  // Adiciona os tokens da linha atual à lista total de tokens
-                }
+                //List<Token> allTokens = new List<Token>();  // Lista para armazenar todos os tokens de todas as linhas
+                //foreach (var lineTokens in lexer.ProgramLines.Values)  // Itera sobre cada lista de tokens em cada linha
+                //{
+                //    allTokens.AddRange(lineTokens);  // Adiciona os tokens da linha atual à lista total de tokens
+                //}
 
-                Parser parser = new Parser(allTokens);  // Cria uma instância do Parser com a lista total de tokens
+                Parser parser = new Parser(lexer.ProgramLines);  // Cria uma instância do Parser com a lista total de tokens
                 parser.Parse();
                 // O próximo passo seria usar um visitor para percorrer a AST, como mostrado anteriormente
                 // PrintVisitor visitor = new PrintVisitor();
