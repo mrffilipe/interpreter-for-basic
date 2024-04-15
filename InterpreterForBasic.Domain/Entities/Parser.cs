@@ -84,12 +84,29 @@ public class Parser
         bool condition = EvaluateCondition();
         if (condition)
         {
-            ParseLine();  // Execute the next line if condition is true
+            if (CurrentToken.Type == TokenType.Keyword && CurrentToken.Value.ToUpper() == "GOTO")
+            {
+                ExecuteGoto();  // Perform the GOTO if the condition is true
+            }
+            else
+            {
+                ParseLine();  // Execute the next line if condition is true and no GOTO
+            }
         }
         else
         {
-            // Skip to next line or handle else (not implemented here)
+            // Skip to next line
+            SkipToNextLine();
         }
+    }
+
+    private void SkipToNextLine()
+    {
+        while (currentTokenIndex < tokens.Count && CurrentToken.Type != TokenType.EOL)
+        {
+            currentTokenIndex++;
+        }
+        currentTokenIndex++;  // Skip the EOL token
     }
 
     private void ExecuteAssignment()
@@ -131,41 +148,33 @@ public class Parser
 
         if (CurrentToken.Type == TokenType.Identifier)
         {
-            // Handle variables
             string varName = CurrentToken.Value;
             currentTokenIndex++;  // Move to the next token (possibly an operator)
 
             if (!variables.TryGetValue(varName, out leftValue))
                 throw new Exception($"Undefined variable {varName}");
 
-            if (currentTokenIndex < tokens.Count && tokens[currentTokenIndex].Type == TokenType.Operator)
+            if (currentTokenIndex < tokens.Count && IsArithmeticOperator(tokens[currentTokenIndex].Value))
             {
-                // There's an operator, so perform a binary operation
                 return EvaluateBinaryOperation(leftValue);
             }
             else
             {
-                // If the next token is not an operator, it could be EOL or ':', just return the variable's value
-                // currentTokenIndex should not increment here because it might skip necessary tokens like EOL or ':'
-                return leftValue;
+                return leftValue;  // No arithmetic operator, return the variable's value
             }
         }
         else if (CurrentToken.Type == TokenType.NumericLiteral)
         {
-            // Handle numeric literals
             leftValue = int.Parse(CurrentToken.Value);
             currentTokenIndex++;  // Move past the number
 
-            if (currentTokenIndex < tokens.Count && tokens[currentTokenIndex].Type == TokenType.Operator)
+            if (currentTokenIndex < tokens.Count && IsArithmeticOperator(tokens[currentTokenIndex].Value))
             {
-                // There's an operator, so perform a binary operation
                 return EvaluateBinaryOperation(leftValue);
             }
             else
             {
-                // No operator, just return the number
-                // Similar to the above, do not increment currentTokenIndex here
-                return leftValue;
+                return leftValue;  // No arithmetic operator, just return the number
             }
         }
         else
@@ -178,8 +187,9 @@ public class Parser
     {
         string op = tokens[currentTokenIndex].Value;
         currentTokenIndex++;  // Skip the operator
-        if (currentTokenIndex >= tokens.Count)
-            throw new Exception("Incomplete expression");
+
+        if (!IsArithmeticOperator(op))
+            throw new Exception("Attempted to use a non-arithmetic operator in an arithmetic context");
 
         int rightValue = EvaluateExpression();  // Recursively evaluate the right-hand expression
 
@@ -193,13 +203,66 @@ public class Parser
                     throw new Exception("Division by zero");
                 return leftValue / rightValue;
             default:
-                throw new Exception($"Unsupported operator {op}");
+                throw new Exception($"Unsupported arithmetic operator {op}");
+        }
+    }
+
+    private bool IsArithmeticOperator(string op)
+    {
+        return op == "+" || op == "-" || op == "*" || op == "/";
+    }
+
+    private bool IsComparisonOperator(string op)
+    {
+        return op == ">" || op == "<" || op == "==" || op == "!=" || op == ">=" || op == "<=";
+    }
+
+    private int PerformOperation(int left, int right, string op)
+    {
+        switch (op)
+        {
+            case "+": return left + right;
+            case "-": return left - right;
+            case "*": return left * right;
+            case "/":
+                if (right == 0)
+                    throw new Exception("Division by zero");
+                return left / right;
+            default:
+                throw new Exception($"Unsupported arithmetic operator {op}");
         }
     }
 
     private bool EvaluateCondition()
     {
-        // Similar to EvaluateExpression, but returns a boolean
-        return true;  // Placeholder
+        int leftValue = EvaluateExpression();  // Evaluate the left side of the condition
+
+        if (currentTokenIndex >= tokens.Count || !IsComparisonOperator(tokens[currentTokenIndex].Value))
+            throw new Exception("Expected comparison operator");
+
+        string operator1 = tokens[currentTokenIndex].Value;
+        currentTokenIndex++;  // Move past the operator
+
+        int rightValue = EvaluateExpression();  // Evaluate the right side of the condition
+
+        bool result = Compare(leftValue, rightValue, operator1);
+
+        return result;
+    }
+
+
+
+    private bool Compare(int left, int right, string op)
+    {
+        switch (op)
+        {
+            case ">": return left > right;
+            case "<": return left < right;
+            case "==": return left == right;
+            case "!=": return left != right;
+            case ">=": return left >= right;
+            case "<=": return left <= right;
+            default: throw new Exception($"Unsupported comparison operator {op}");
+        }
     }
 }
