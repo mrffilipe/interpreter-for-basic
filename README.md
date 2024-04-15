@@ -3,9 +3,12 @@
 *Nota*: Este projeto ainda não se encontra finalizado completamente, logo, poderá ocorrer erros durante a execução do programa.
 
 ## Quais recursos já estão implementados?
-- REM comentário
-- PRINT (tanto para números literais, quanto strings literáis)
-- Labels e GOTO (estão sendo implementados no momento)
+- REM comentários
+- Label
+- PRINT (números literais, strings literais, variáveis)
+- INPUT
+- IF-GOTO
+- HALT
 
 ## Como executar o projeto
 
