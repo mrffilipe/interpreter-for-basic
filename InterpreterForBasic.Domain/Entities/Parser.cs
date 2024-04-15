@@ -29,19 +29,19 @@ public class Parser
     {
         AstNode node = null;
 
-        // O loop continua até que seja o fim da linha ou não haja mais tokens.
+        // Certifique-se de não processar uma linha além do EOL
         while (currentTokenIndex < tokens.Count && CurrentToken.Type != TokenType.EOL)
         {
             if (CurrentToken.Type == TokenType.Comment)
             {
-                // Pula os tokens de comentário.
+                // Pula o token de comentário
                 currentTokenIndex++;
-                if (currentTokenIndex < tokens.Count && CurrentToken.Type == TokenType.EOL)
+                // Pula qualquer token de EOL após um comentário
+                while (currentTokenIndex < tokens.Count && CurrentToken.Type == TokenType.EOL)
                 {
-                    // Se o próximo token for EOL, saia do loop.
-                    break;
+                    currentTokenIndex++;
                 }
-                continue;  // Continua para o próximo token.
+                continue;  // Continua para o próximo token
             }
 
             switch (CurrentToken.Type)
@@ -60,6 +60,8 @@ public class Parser
                     break;
                 case TokenType.Keyword when CurrentToken.Value == "HALT":
                     node = ParseHalt();
+                    // Após um HALT não deve haver mais tokens a serem processados nesta linha
+                    currentTokenIndex = tokens.Count;
                     break;
                 case TokenType.Identifier:
                     node = ParseAssignment();
@@ -68,25 +70,37 @@ public class Parser
                     throw new Exception($"Unexpected token: {CurrentToken.Value}");
             }
 
-            // Se o node foi criado, o resto da linha deve ser relacionado a este comando, então devemos parar de analisar.
-            if (node != null)
+            // Se um nó foi criado, significa que a linha foi processada.
+            // Se o nó não for um comando de fluxo de controle (como IF ou GOTO), saia do loop.
+            if (node != null && !(node is ConditionalNode) && !(node is GotoNode))
             {
                 break;
             }
         }
 
         // Pula o token EOL apenas se ainda houver tokens restantes para processar.
-        if (currentTokenIndex < tokens.Count)
+        if (currentTokenIndex < tokens.Count && CurrentToken.Type == TokenType.EOL)
         {
-            currentTokenIndex++;  // Pula o token EOL, se presente.
+            currentTokenIndex++;
         }
         return node;
     }
 
     private HaltNode ParseHalt()
     {
-        currentTokenIndex++;  // Skip 'HALT'
-        return new HaltNode();
+        // Já sabemos que o token atual é 'HALT', então avançamos para o próximo token.
+        currentTokenIndex++;
+
+        // Se o 'HALT' for o último token, não precisamos fazer mais nada.
+        if (currentTokenIndex >= tokens.Count || tokens[currentTokenIndex].Type == TokenType.EOL)
+        {
+            return new HaltNode();
+        }
+
+        // Se houver mais tokens após 'HALT', isso pode ser um erro de sintaxe, 
+        // porque 'HALT' deve ser o último comando executável em uma linha/programa.
+        // Aqui você pode decidir se quer lançar um erro ou apenas registrar um aviso.
+        throw new Exception("Unexpected tokens after 'HALT'");
     }
 
     private InputNode ParseInput()
