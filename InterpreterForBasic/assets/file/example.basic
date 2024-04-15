@@ -5,7 +5,6 @@
 41 IF I > N GOTO 80
 42 S = S + I
 60 I = I + 1
-61 PRINT I
 70 GOTO 41
 80 PRINT "result ="
 81 PRINT S

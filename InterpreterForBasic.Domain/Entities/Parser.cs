@@ -11,17 +11,19 @@ public class Parser
     public Parser(Dictionary<int, List<Token>> programLines)
     {
         this.programLines = programLines;
-        FlattenTokens();  // Initialize tokens list from program lines
+        FlattenTokens();
     }
 
     private void FlattenTokens()
     {
         tokens = new List<Token>();
+
         foreach (var line in programLines)
         {
-            tokens.AddRange(line.Value);  // Add all tokens from each line
+            tokens.AddRange(line.Value);
+
             if (line.Value.Count > 0 && line.Value.Last().Type != TokenType.EOL)
-                tokens.Add(new Token(TokenType.EOL, "\n"));  // Ensure each line ends with EOL
+                tokens.Add(new Token(TokenType.EOL, "\n"));
         }
     }
 
@@ -39,13 +41,15 @@ public class Parser
         {
             if (CurrentToken.Type == TokenType.Comment)
             {
-                currentTokenIndex++;  // Skip comments
+                currentTokenIndex++;
+
                 continue;
             }
 
             if (CurrentToken.Type == TokenType.Separator && CurrentToken.Value == ":")
             {
-                currentTokenIndex++;  // Skip separators
+                currentTokenIndex++;
+
                 continue;
             }
 
@@ -65,7 +69,7 @@ public class Parser
                     break;
                 case TokenType.Keyword when CurrentToken.Value.ToUpper() == "HALT":
                     ExecuteHalt();
-                    return;  // Halt execution
+                    return;
                 case TokenType.Identifier:
                     ExecuteAssignment();
                     break;
@@ -73,12 +77,14 @@ public class Parser
                     throw new Exception($"Unexpected token: {CurrentToken.Value}");
             }
         }
-        currentTokenIndex++;  // Move past the EOL
+
+        currentTokenIndex++;
     }
 
     private void ExecuteGoto()
     {
-        currentTokenIndex++;  // Skip 'GOTO'
+        currentTokenIndex++;
+
         if (CurrentToken.Type != TokenType.NumericLiteral)
             throw new Exception("Syntax error in GOTO statement: Line number expected.");
 
@@ -86,22 +92,24 @@ public class Parser
         if (!programLines.ContainsKey(lineNumber))
             throw new Exception($"Line number {lineNumber} not found in program lines.");
 
-        // Find the index of the first token of the target line in the flat token list
-        currentTokenIndex = FindTokenIndexByLineNumber(lineNumber);  // Adjust currentTokenIndex to the start of the target line
+        currentTokenIndex = FindTokenIndexByLineNumber(lineNumber);
     }
 
     private int FindTokenIndexByLineNumber(int lineNumber)
     {
         int index = 0;
+
         foreach (var line in programLines)
         {
             if (line.Key == lineNumber)
             {
-                return index;  // Return the index of the first token on the target line
+                return index;
             }
-            index += line.Value.Count;  // Add the number of tokens in the current line to index
+
+            index += line.Value.Count;
         }
-        throw new Exception("Line number not found in tokens.");  // Line number not found
+
+        throw new Exception("Line number not found in tokens.");
     }
 
     private void ExecuteHalt()
@@ -112,9 +120,9 @@ public class Parser
 
     private void ExecuteInput()
     {
-        currentTokenIndex++;  // Skip 'INPUT'
+        currentTokenIndex++;
         string variableName = CurrentToken.Value;
-        currentTokenIndex++;  // Skip variable name
+        currentTokenIndex++;
         Console.Write($"{variableName}: ");
         int value = int.Parse(Console.ReadLine());
         variables[variableName] = value;
@@ -122,22 +130,22 @@ public class Parser
 
     private void ExecuteConditional()
     {
-        currentTokenIndex++;  // Skip 'IF'
+        currentTokenIndex++;
         bool condition = EvaluateCondition();
+
         if (condition)
         {
             if (CurrentToken.Type == TokenType.Keyword && CurrentToken.Value.ToUpper() == "GOTO")
             {
-                ExecuteGoto();  // Perform the GOTO if the condition is true
+                ExecuteGoto();
             }
             else
             {
-                ParseLine();  // Execute the next line if condition is true and no GOTO
+                ParseLine();
             }
         }
         else
         {
-            // Skip to next line
             SkipToNextLine();
         }
     }
@@ -148,31 +156,30 @@ public class Parser
         {
             currentTokenIndex++;
         }
-        currentTokenIndex++;  // Skip the EOL token
+
+        currentTokenIndex++;
     }
 
     private void ExecuteAssignment()
     {
         string variableName = CurrentToken.Value;
-        currentTokenIndex++;  // Skip variable name
-        currentTokenIndex++;  // Skip '='
+        currentTokenIndex++;
+        currentTokenIndex++;
         int value = EvaluateExpression();
         variables[variableName] = value;
     }
 
     private void ExecutePrint()
     {
-        currentTokenIndex++;  // Skip 'PRINT'
+        currentTokenIndex++;
 
         if (CurrentToken.Type == TokenType.StringLiteral)
         {
-            // Diretamente imprime o literal string
-            Console.WriteLine(CurrentToken.Value.Trim('"'));  // Remove aspas duplas antes de imprimir
-            currentTokenIndex++;  // Move past the string literal
+            Console.WriteLine(CurrentToken.Value.Trim('"'));
+            currentTokenIndex++;
         }
         else
         {
-            // Assume que o token é uma expressão numérica e avalia
             int value = EvaluateExpression();
             Console.WriteLine(value);
         }
@@ -185,7 +192,7 @@ public class Parser
         if (CurrentToken.Type == TokenType.Identifier)
         {
             string varName = CurrentToken.Value;
-            currentTokenIndex++;  // Move to the next token (possibly an operator)
+            currentTokenIndex++;
 
             if (!variables.TryGetValue(varName, out leftValue))
                 throw new Exception($"Undefined variable {varName}");
@@ -196,13 +203,13 @@ public class Parser
             }
             else
             {
-                return leftValue;  // No arithmetic operator, return the variable's value
+                return leftValue;
             }
         }
         else if (CurrentToken.Type == TokenType.NumericLiteral)
         {
             leftValue = int.Parse(CurrentToken.Value);
-            currentTokenIndex++;  // Move past the number
+            currentTokenIndex++;
 
             if (currentTokenIndex < tokens.Count && IsArithmeticOperator(tokens[currentTokenIndex].Value))
             {
@@ -210,7 +217,7 @@ public class Parser
             }
             else
             {
-                return leftValue;  // No arithmetic operator, just return the number
+                return leftValue;
             }
         }
         else
@@ -222,12 +229,12 @@ public class Parser
     private int EvaluateBinaryOperation(int leftValue)
     {
         string op = tokens[currentTokenIndex].Value;
-        currentTokenIndex++;  // Skip the operator
+        currentTokenIndex++;
 
         if (!IsArithmeticOperator(op))
             throw new Exception("Attempted to use a non-arithmetic operator in an arithmetic context");
 
-        int rightValue = EvaluateExpression();  // Recursively evaluate the right-hand expression
+        int rightValue = EvaluateExpression();
 
         switch (op)
         {
@@ -253,40 +260,22 @@ public class Parser
         return op == ">" || op == "<" || op == "==" || op == "!=" || op == ">=" || op == "<=";
     }
 
-    private int PerformOperation(int left, int right, string op)
-    {
-        switch (op)
-        {
-            case "+": return left + right;
-            case "-": return left - right;
-            case "*": return left * right;
-            case "/":
-                if (right == 0)
-                    throw new Exception("Division by zero");
-                return left / right;
-            default:
-                throw new Exception($"Unsupported arithmetic operator {op}");
-        }
-    }
-
     private bool EvaluateCondition()
     {
-        int leftValue = EvaluateExpression();  // Evaluate the left side of the condition
+        int leftValue = EvaluateExpression();
 
         if (currentTokenIndex >= tokens.Count || !IsComparisonOperator(tokens[currentTokenIndex].Value))
             throw new Exception("Expected comparison operator");
 
         string operator1 = tokens[currentTokenIndex].Value;
-        currentTokenIndex++;  // Move past the operator
+        currentTokenIndex++;
 
-        int rightValue = EvaluateExpression();  // Evaluate the right side of the condition
+        int rightValue = EvaluateExpression();
 
         bool result = Compare(leftValue, rightValue, operator1);
 
         return result;
     }
-
-
 
     private bool Compare(int left, int right, string op)
     {
