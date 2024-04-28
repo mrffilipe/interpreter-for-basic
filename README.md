@@ -25,3 +25,6 @@
 
 #### Utilizando o interpretador
 - Digite os comandos Basic linha a linha para interpretação (código ainda não está totalmente finalizado).
+
+## Exemplos
+O diretório para colocar o código a ser interpretado esta localizado em InterpreterForBasic/assets/file juntamente com o código teste utilizado como exemplo.
