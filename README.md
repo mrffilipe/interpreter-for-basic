@@ -1,8 +1,12 @@
 # [InterpreteForBasic](https://github.com/mrffilipe/interpreter-for-basic)
 
+*Grupo*:
+- Filipe Moreira Ferracioli
+- Marcos Vinicius
+
 *Nota*: Este projeto ainda não se encontra finalizado completamente, logo, poderá ocorrer erros durante a execução do programa.
 
-## Quais recursos já estão implementados?
+## Quais recursos estão implementados?
 - REM comentários
 - Label
 - PRINT (números literais, strings literais, variáveis)
